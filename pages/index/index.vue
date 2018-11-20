@@ -19,6 +19,8 @@
                 </view>
 			</view>
 		</view>
+        
+        <button class="login-btn" open-type="getUserInfo" v-if="!authed" @getuserinfo="login"></button>
 	</view>
 </template>
 
@@ -27,8 +29,7 @@
 	export default {
 		data() {
 			return {
-                
-                
+                authed: false,
 				indicatorDots: true,
 				indicatorColor: '#007aff',
 				autoplay: true,
@@ -40,11 +41,44 @@
 		},
 		onLoad() {
 			uni.showLoading();
-            this.login();
+            let _this = this;
+            wx.getSetting({
+            	success (res){
+            		if (res.authSetting['scope.userInfo']) {
+                        _this.authed = true;
+            		}
+            	}
+            })
+            
+            this.code_2_session();
 			this.getBanner();
 			this.getProduct();
 		},
 		methods: {
+            login(e) {
+                uni.request({
+                	url: this.$requestUrl+'edit_reader',
+                	method: 'POST',
+                	header: {
+                		'content-type': 'application/x-www-form-urlencoded'
+                	},
+                	data: {
+                		openid: this.openid,
+                		nickname: e.detail.userInfo.nickName,
+                		head: e.detail.userInfo.avatarUrl
+                	},
+                	success: res => {
+                		this.authed = true;
+                		this.readerInfo = res.data.data;
+                		uni.showToast({
+                			title: '登录成功',
+                			duration: 1500
+                		});
+                	},
+                	fail: () => {},
+                	complete: () => {}
+                });
+            },
 			getBanner() {
 				uni.request({
 					url: this.$requestUrl + 'get_comic_banner',
@@ -90,7 +124,7 @@
 					url: "../comic-info/comic-info?detailData=" + JSON.stringify(detail)
 				})
 			},
-            login() {
+            code_2_session() {
                 uni.login({
                 	provider: 'weixin',
                 	success: res => {
@@ -180,4 +214,16 @@
         display: none;
     }
 
+
+    .login-btn{
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: none;
+    }
+    .login-btn:after{
+        border: 0;
+    }
 </style>

@@ -1,29 +1,30 @@
 <template>
 	<view>
-		<view class="top">
-			<view class="login">
-				<view class="login-item">
-					<image :src="readerInfo.head" class="head"></image>
-                    <view v-if="authed">
-                    	{{readerInfo.nickname}}
-                    </view>
-					<button class="login-btn" open-type="getUserInfo" v-else @getuserinfo="login">
-						登录
-					</button>
-                    
+		<view class="info">
+            <image class="logo" src="../../static/image/brand.png" mode="widthFix"></image>
+            <view class="member">
+                <view class="title">欢迎您</view>
+                <view class="content" v-if="authed">
+                	<image :src="readerInfo.head" class="head"></image>
+                	<view class="nickname">{{readerInfo.nickname}}</view>
+                </view>
+                <view class="login" v-else>
+                	<button class="login-btn" open-type="getUserInfo" @getuserinfo="login">
+                		登录
+                	</button>
+                </view>
+            </view>
+		</view>
+		
+		<view class="uni-list">
+			<view class="uni-list-cell" v-for="(list,index) in listData" :key="index">
+				<view class="uni-list-cell-navigate uni-navigate-right" @tap="custom(list.event)">
+					<view class="left">
+						<image :src="list.icon" class="icon"></image>
+						{{list.title}}
+					</view>
 				</view>
 			</view>
-            
-            <view class="uni-list">
-            	<view class="uni-list-cell" v-for="(item,index) in list" :key="index">
-            		<view class="uni-list-cell-navigate uni-navigate-right">
-                        <view class="left">
-                        	<image :src="item.icon" class="icon"></image>
-                        	{{item.title}}
-                        </view>
-            		</view>
-            	</view>
-            </view>
 		</view>
 	</view>
 </template>
@@ -39,18 +40,21 @@
                 readerInfo: {
                     head: '../../static/image/user.png',
                 },
-                list: [
+                listData: [
                     {
                     	title: '充值',
                     	icon: '../../static/image/recharge.png',
+                        event: 'recharge'
                     },
                     {
                         title: '积分',
                         icon: '../../static/image/score.png',
+                        event: 'integral'
                     },
                     {
                     	title: '消费记录',
                     	icon: '../../static/image/pay.png',
+                        event: 'consume'
                     }
                 ]
 			};
@@ -93,6 +97,27 @@
                 	fail: () => {},
                 	complete: () => {}
                 });
+            },
+            custom(e) {
+                this[e]()
+            },
+            recharge() {
+                uni.showToast({
+                    icon: 'none',
+                	title: '期待吗'
+                })
+            },
+            integral() {
+                uni.showToast({
+                	icon: 'none',
+                	title: '期待吗'
+                })
+            },
+            consume() {
+                uni.showToast({
+                	icon: 'none',
+                	title: '期待吗'
+                })
             }
         },
         onShareAppMessage() {
@@ -105,32 +130,52 @@
 </script>
 
 <style>
-    .login{
+    .info{
         height: 300upx;
-        margin: 0 36upx;
-        background: #FFE5DB;
-        border-radius: 8px;
+        background-color: #E27C6B;
         position: relative;
+        margin-bottom: 150upx;
+        display: flex;
+        justify-content: center;
     }
-    .login-item{
-        height: 200upx;
+    .info .logo{
+        width: 300upx;
+    }
+    .info .member{
+        width: 600upx;
+        height: 250upx;
+        border-radius: 5px;
+        background-color: #FFF;
+        position: absolute;
+        bottom: -125upx;
+        box-shadow: 0 2px 4px 0 rgba(0,0,0,0.10);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+    }
+    .info .member .content{
         display: flex;
         align-items: center;
     }
-    .head{
+    .info .member .head{
         width: 120upx;
         height: 120upx;
-        margin: 0 30upx 0 70upx;
+        margin-right: 30upx;
     }
+    
     .login-btn{
         font-size: 32upx;
+        width: 300upx;
+        height: 80upx;
+        line-height: 80upx;
         margin: 0;
-        padding: 0 8px;
-        border: 1px solid #999;
-        border-radius: 5px;
-        color: #999;
-        line-height: 1.5em;
-        background-color: #FFF;
+        border-radius: 80upx;
+        color: #FFF;
+        background-color: #E27C6B;
+    }
+    .login-btn:after{
+        border: none;
     }
     
     .uni-list:before,
