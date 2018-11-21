@@ -4,10 +4,13 @@
 			<view class="uni-media-list">
 				<image class="uni-media-list-logo" :src="product.cover" mode="aspectFill"></image>
 				<view class="uni-media-list-body">
-					<view class="uni-media-list-text-top">{{product.title}}</view>
+					<view class="uni-media-list-text-top">
+                        <view class="title">{{product.title}}</view>
+                        <view class="brief">{{product.last_time}}</view>
+                    </view>
 					<view class="uni-media-list-text-bottom">
-						<text>已读{{product.rate}}%</text>
-						<text>{{product.created_at}}</text>
+                        <view class="rate">已读{{product.rate}}%</view>
+                        <progress percent="40" stroke-width="12" color="#35352B" />
 					</view>
 				</view>
 			</view>
@@ -71,5 +74,48 @@
 </script>
 
 <style>
-
+    page{
+        background-color: #FFF;
+    }
+    .uni-list{
+        padding: 20px;
+        box-sizing: border-box;
+    }
+    .uni-list:before,
+    .uni-list:after{
+    	height: 0upx;
+    }
+    .uni-list-cell{
+        border: 2px solid #35352B;
+        border-radius: 5px;
+        background-color: #FBF5E7;
+        box-shadow: 2px 2px 2px 0 rgba(0,0,0,.9);
+    }
+    .uni-media-list-logo{
+        width: 150upx;
+        height: 220upx;
+        border: 2px solid #35352B;
+        border-radius: 3px;
+    }
+    .uni-media-list-body{
+        height: 220upx;
+        padding: 0 10px;
+    }
+    .uni-media-list-text-top{
+        margin: 15upx 0;
+    }
+    .uni-media-list-text-top .title{
+        font-size: 32upx;
+        line-height: 2em;
+    }
+    .uni-media-list-text-top .brief{
+        font-size: 26upx;
+    }
+    .uni-media-list-text-bottom{
+        margin-bottom: 20upx;
+    }
+    .uni-media-list-text-bottom .rate{
+        font-size: 26upx;
+        line-height: 2em;
+    }
 </style>
