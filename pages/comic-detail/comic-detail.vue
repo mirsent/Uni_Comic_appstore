@@ -1,16 +1,36 @@
 <template>
 	<view class="page">
-		<view class="article-content">
-			<image v-for="(img, index) in imgs" :key="index" lazy-load :src="imgPrefix+img" mode="widthFix"></image>
-		</view>
-		<view class="btn-group">
-			<picker class="picker-item" mode="selector" :range="chapterData" :value="chapterIndex" range-key="catalog_name"
-			 @change="chapterChange">
-				<button type="default">目录</button>
-			</picker>
-			<button type="default" @tap="prev">上一章</button>
-			<button type="default" @tap="next">下一章</button>
-		</view>
+        <view class="article-content">
+        	<image v-for="(img, index) in imgs" :key="index" lazy-load :src="imgPrefix+img" mode="widthFix"></image>
+        </view>
+        <view class="btn-group">
+        	<picker class="picker-item" mode="selector" :range="chapterData" :value="chapterIndex" range-key="catalog_name"
+        	@change="chapterChange">
+        		<button type="default">目录</button>
+        	</picker>
+        	<button type="default" @tap="prev">上一章</button>
+        	<button type="default" @tap="next">下一章</button>
+        </view>
+        
+        
+        <view class="mask" v-if="showRelease" :catchtouchmove="!showRelease">
+        	<view class="auth">
+        		<view class="brief">解锁后继续阅读</view>
+        		<view class="auth-box">
+        			<view class="box-header">
+        				① 金币解锁
+        			</view>
+        			<view class="title">需支付<text>50金币</text></view>
+        			<button class="btn">充值并解锁</button>
+        		</view>
+        		<view class="auth-box">
+        			<view class="box-header">
+        				② 转发解锁
+        			</view>
+        			<button class="btn">转发2名好友</button>
+        		</view>
+        	</view>
+        </view>
         
         <modalShare @close="closeModal" @note="noteShare"></modalShare>
 	</view>
@@ -37,6 +57,11 @@
                 shareCover: '',
                 shareChapter: '',
                 
+                // 验证权限
+                needRelease: false,
+                showRelease: false,
+                canChoose: true,
+                
 				openid: '',
 				imgPrefix: '',
 				comic: {},
@@ -48,8 +73,6 @@
 		onLoad(e) {
 			uni.showLoading();
             
-            console.log(e);
-            
 			let readerInfo = service.getUsers();
 			this.openid = readerInfo.openid;
 			this.imgPrefix = this.$imgUrl; // 图片前缀
@@ -60,7 +83,8 @@
 			this.chapterIndex = comicInfo.chapter - 1; //picker选中项
 
 			this.reading();
-			this.get_chapter();
+            this.checkAuth();
+			this.get_chapter(); // 获取目录
 		},
         onShow() {
         	if (this.needShare == 1) {
@@ -76,6 +100,11 @@
         	if (this.modalShow) {
         		this.noteShare();
         	}
+        },
+        onPageScroll(e) {
+            if (e.scrollTop > 300 && this.needRelease) {
+            	this.showRelease = true;
+            }
         },
 		methods: {
             noteShare(){
@@ -134,16 +163,16 @@
 					}
 				})
 			},
-//             prev() {
-//                 let detail = {
-//                     'comic_id': 1,
-//                     'title': '23',
-//                     'chapter': 1
-//                 }
-//                 uni.redirectTo({
-//                 	url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
-//                 });
-//             },
+            prev() {
+                let detail = {
+                    'comic_id': 1,
+                    'title': '23',
+                    'chapter': 1
+                }
+                uni.redirectTo({
+                	url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
+                });
+            },
 			next() {
                 this.readingNext(this.comic.comic_id, this.comic.chapter, this.openid);
 			},
@@ -197,6 +226,31 @@
 			},
             closeModal() {
                 this.modalShow = false;
+            },
+            checkAuth() {
+                // 验证权限
+                uni.request({
+                	url: this.$requestUrl+'check_auth',
+                	method: 'GET',
+                	data: {
+                		comic_id: this.comic.comic_id,
+                		chapter: this.comic.chapter,
+                		openid: this.openid
+                	},
+                	success: res => {
+                		let status = res.data.status;
+                        if (status == '-2') {
+                        	this.needRelease = true;
+                            this.canChoose = false;
+                        } else if (status == '-1') {
+                        	this.needRelease = true;
+                        }
+                	},
+                	fail: () => {},
+                	complete: () => {
+                		uni.hideLoading();
+                	}
+                });
             }
 		},
         onShareAppMessage(res) {
@@ -226,6 +280,62 @@
 </script>
 
 <style>
+    .mask{
+        background-color: transparent;
+    }
+    .auth{
+        padding: 20px;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 500upx;
+        background-image: linear-gradient(to bottom, rgba(255,255,255,0.9), #FFF);
+    }
+    .auth .box-header{
+        font-size: 28upx;
+        color: #919191;
+    }
+    .auth .brief{
+        font-size: 28upx;
+        color: #919191;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .auth .brief:before,
+    .auth .brief:after {
+        content: '';
+        display: block;
+        width: 200upx;
+        height: 1px;
+        background-color: #CCC;
+    }
+    .auth .title{
+        font-size: 42upx;
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .auth .title text{
+        color: #E27C6B;
+    }
+    
+    .auth .btn{
+        font-size: 32upx;
+        height: 90upx;
+        line-height: 90upx;
+        border-radius: 90upx;
+        background: linear-gradient(to right, #FFE153, #FFC11F);
+    }
+    .auth .btn:before,
+    .auth .btn:after{
+        border: 0;
+    }
+    
+    
+    
+    
 	.page {
 		background: #efeff4;
 		padding: 0 10upx;

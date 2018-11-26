@@ -220,6 +220,7 @@
                 }
             },
             reading() {
+                // 直接阅读
                 let _this = this;
                 wx.getSetting({
                 	success (res){
@@ -262,52 +263,62 @@
                 })
             },
             readingChoose(e) {
+                // 选章阅读
                 let _this = this;
                 wx.getSetting({
                 	success (res){
                 		if (res.authSetting['scope.userInfo']) {
-                            uni.showLoading();
-                            uni.request({
-                            	url: _this.$requestUrl+'check_auth',
-                            	method: 'GET',
-                            	data: {
-                                    comic_id: _this.comic.comic_id,
-                                    chapter: e.catalog,
-                                    openid: _this.openid
-                                },
-                            	success: res => {
-                                    if (res.data.status == '-2') {
-                                    	uni.showToast({
-                                    		title: '付费阅读',
-                                            icon: 'none',
-                                            duration: 2000
-                                    	});
-                                    }else if (res.data.status == '-1') {
-                                        // 限制阅读
-                                        let comicInfo = res.data.data;
-                                        _this.needShare = comicInfo.need_share;
-                                        _this.titleText = '精彩章节订阅';
-                                        _this.contentText = '转发'+_this.needShare+'名好友即可阅读';
-                                        _this.shareCover = comicInfo.chapter_cover; // 章节封面
-                                        _this.shareChapter = e.catalog; // 需要解除限制的章节
-                                    	_this.modalShow = true;
-                                    } else {
-                                        let detail = {
-                                        	comic_id: _this.comic.comic_id,
-                                        	title: _this.comic.title,
-                                            cover: _this.comic.cover,
-                                        	chapter: e.catalog, // 选择章节
-                                        }
-                                        uni.navigateTo({
-                                        	url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
-                                        })
-                                    }
-                                },
-                            	fail: () => {},
-                            	complete: () => {
-                                    uni.hideLoading();
-                                }
-                            });
+                            let detail = {
+                            	comic_id: _this.comic.comic_id,
+                            	title: _this.comic.title,
+                            	cover: _this.comic.cover,
+                            	chapter: e.catalog, // 选择章节
+                            }
+                            uni.navigateTo({
+                            	url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
+                            })
+//                             uni.showLoading();
+//                             uni.request({
+//                             	url: _this.$requestUrl+'check_auth',
+//                             	method: 'GET',
+//                             	data: {
+//                                     comic_id: _this.comic.comic_id,
+//                                     chapter: e.catalog,
+//                                     openid: _this.openid
+//                                 },
+//                             	success: res => {
+//                                     if (res.data.status == '-2') {
+//                                     	uni.showToast({
+//                                     		title: '付费阅读',
+//                                             icon: 'none',
+//                                             duration: 2000
+//                                     	});
+//                                     }else if (res.data.status == '-1') {
+//                                         // 限制阅读
+//                                         let comicInfo = res.data.data;
+//                                         _this.needShare = comicInfo.need_share;
+//                                         _this.titleText = '精彩章节订阅';
+//                                         _this.contentText = '转发'+_this.needShare+'名好友即可阅读';
+//                                         _this.shareCover = comicInfo.chapter_cover; // 章节封面
+//                                         _this.shareChapter = e.catalog; // 需要解除限制的章节
+//                                     	_this.modalShow = true;
+//                                     } else {
+//                                         let detail = {
+//                                         	comic_id: _this.comic.comic_id,
+//                                         	title: _this.comic.title,
+//                                             cover: _this.comic.cover,
+//                                         	chapter: e.catalog, // 选择章节
+//                                         }
+//                                         uni.navigateTo({
+//                                         	url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
+//                                         })
+//                                     }
+//                                 },
+//                             	fail: () => {},
+//                             	complete: () => {
+//                                     uni.hideLoading();
+//                                 }
+                            // });
                 		} else {
                 			uni.showModal({
                 				title: '提醒',
