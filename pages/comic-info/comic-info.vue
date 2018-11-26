@@ -44,14 +44,18 @@
         </view>
         
         <view class="body" v-if="isDetail">
+            <view class="label">简介：</view>
         	<view class="info">
-                <text>简介：</text>
-                {{comic.brief}}
+                <rich-text :nodes="comic.brief" class="rich"></rich-text>
             </view>
             <view class="status">
             	<view class="status-item">
             		<image src="../../static/image/see_on.png" class="icon icon-see"></image>
                     <view class="title">总浏览{{comic.popularity}}</view>
+            	</view>
+            	<view class="status-item">
+            		<image src="../../static/image/collect_on.png" class="icon"></image>
+                    <view class="title">{{comic.collection}}人收藏</view>
             	</view>
             	<view class="status-item">
             		<image src="../../static/image/like_on.png" class="icon"></image>
@@ -272,7 +276,13 @@
                                     openid: _this.openid
                                 },
                             	success: res => {
-                                    if (res.data.status == '-1') {
+                                    if (res.data.status == '-2') {
+                                    	uni.showToast({
+                                    		title: '付费阅读',
+                                            icon: 'none',
+                                            duration: 2000
+                                    	});
+                                    }else if (res.data.status == '-1') {
                                         // 限制阅读
                                         let comicInfo = res.data.data;
                                         _this.needShare = comicInfo.need_share;
@@ -589,13 +599,14 @@
     .body{
         padding: 20px 15px;
     }
+    .body .label{
+        color: #919191;
+        margin-bottom: 10px;
+    }
     .info{
         font-size: 32upx;
-        line-height: 1.5em;
+        line-height: 40upx;
         margin-bottom: 20px;
-    }
-    .info text{
-        color: #919191;
     }
     .status{
         color: #919191;

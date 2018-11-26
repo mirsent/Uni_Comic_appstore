@@ -1,16 +1,17 @@
 <template>
 	<view class="container">
-		<swiper :indicator-dots="indicatorDots" :indicator-active-color="indicatorColor" :autoplay="autoplay" :interval="interval"
+		<!-- <swiper :indicator-dots="indicatorDots" :indicator-active-color="indicatorColor" :autoplay="autoplay" :interval="interval"
 		 :duration="duration">
 			<swiper-item v-for="(banner, index) in bannerData" :key="index">
 				<view class="swiper-item">
 					<image :src="banner.banner_url"></image>
 				</view>
 			</swiper-item>
-		</swiper>
+		</swiper> -->
 
 		<view class="list">
-			<view class="item" v-for="(comic, index) in comicData" :key="index" :class="{up: index/2 == 0}"
+			<view class="item" v-for="(comic, index) in comicData" :key="index"
+                :class="{up : index == 0}"
                 @tap="goInfo(comic)">
 				<image class="cover" :src="comic.cover" mode="aspectFill"></image>
                 <view class="item-c">
@@ -51,7 +52,7 @@
             })
             
             this.code_2_session();
-			this.getBanner();
+			// this.getBanner();
 			this.getProduct();
 		},
 		methods: {
@@ -169,11 +170,11 @@
 
     
     .list{
-        padding: 20px;
+        padding: 0 20px;
     }
 	.list .item{
         width: 100%;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
         background-color: #FFF;
         overflow: hidden;
         position: relative;
@@ -202,16 +203,22 @@
     }
     
     .list .up .cover{
-        height: 550upx;
+        height: 600upx;
     }
     .list .up .item-c{
     	position: absolute;
-    	top: 0;
+    	bottom: 0;
     	left: 0;
     	right: 0;
+        background-color: transparent;
+        background-image: linear-gradient(to bottom, rgba(60,103,130,0), #333);
+        color: #FFF;
+    }
+    .list .up .title{
+        line-height: 1.5em;
     }
     .list .up .brief{
-        display: none;
+        color: #FFF;
     }
 
 

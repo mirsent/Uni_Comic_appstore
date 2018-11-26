@@ -8,6 +8,7 @@
 			 @change="chapterChange">
 				<button type="default">目录</button>
 			</picker>
+			<button type="default" @tap="prev">上一章</button>
 			<button type="default" @tap="next">下一章</button>
 		</view>
         
@@ -46,6 +47,8 @@
 		},
 		onLoad(e) {
 			uni.showLoading();
+            
+            console.log(e);
             
 			let readerInfo = service.getUsers();
 			this.openid = readerInfo.openid;
@@ -131,6 +134,16 @@
 					}
 				})
 			},
+//             prev() {
+//                 let detail = {
+//                     'comic_id': 1,
+//                     'title': '23',
+//                     'chapter': 1
+//                 }
+//                 uni.redirectTo({
+//                 	url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
+//                 });
+//             },
 			next() {
                 this.readingNext(this.comic.comic_id, this.comic.chapter, this.openid);
 			},
@@ -149,7 +162,13 @@
 						openid: openid
 					},
 					success: (res) => {
-						if (res.data.status == '-1') {
+                        if (res.data.status == '-2') {
+                        	uni.showToast({
+                        		title: '付费阅读',
+                        		icon: 'none',
+                        		duration: 2000
+                        	});
+                        }else if (res.data.status == '-1') {
                             // 限制阅读
                             let comicInfo = res.data.data;
                             this.needShare = comicInfo.need_share;
