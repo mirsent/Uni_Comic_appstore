@@ -17,7 +17,7 @@
         </view>
         
         
-        <view class="mask" v-if="showRelease" :catchtouchmove="!showRelease">
+        <view class="mask" v-if="showRelease" :catchtouchmove="false">
         	<view class="auth">
         		<view class="brief">解锁后继续阅读</view>
         		<view class="auth-box">
@@ -142,7 +142,6 @@
             		success: res => {
             			let info = res.data.data;
             			let status = res.data.status;
-                        console.log(res);
                         if (status == 1) {
                             this.needRelease = false;
                         	this.showRelease = false;

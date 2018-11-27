@@ -343,6 +343,7 @@
                 	success: res => {
                 		if (res.data.status == 1) {
                             this.comic.is_collect = 1;
+                            this.comic.collection = parseInt(this.comic.collection) + 1;
                 			uni.showToast({
                                 icon: 'none',
                 				title: '收藏成功'
@@ -369,6 +370,7 @@
                 	success: res => {
                 		if (res.data.status == 1) {
                             this.comic.is_collect = 0;
+                            this.comic.collection = parseInt(this.comic.collection) - 1;
                 			uni.showToast({
                                 icon: 'none',
                 				title: '取消收藏'

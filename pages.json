@@ -2,7 +2,7 @@
 	"pages": [{
 			"path": "pages/index/index",
 			"style": {
-				"navigationBarTitleText": "首页"
+				"navigationBarTitleText": "爱漫"
 			}
 		},
 		{
@@ -21,12 +21,14 @@
 		{
 			"path": "pages/shelf/shelf",
 			"style": {
-				"navigationBarTitleText": "书架"
+				"navigationBarTitleText": "书架",
+                "enablePullDownRefresh": true
 			}
 		},
 		{
 			"path": "pages/my/my",
 			"style": {
+                "disableScroll": true,
 				"navigationBarTitleText": "",
 				"navigationBarTextStyle": "white",
 				"navigationBarBackgroundColor": "#E27C6B"

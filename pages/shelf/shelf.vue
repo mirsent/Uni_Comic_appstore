@@ -1,6 +1,6 @@
 <template>
 	<view class="uni-list">
-		<view class="uni-list-cell" v-for="(product,key) in productList" :key="key" @tap="goInfo(product)">
+		<view class="uni-list-cell" v-for="(product,key) in productList" :key="key" @tap="reading(product)">
 			<view class="uni-media-list">
 				<image class="uni-media-list-logo" :src="product.cover" mode="aspectFill"></image>
 				<view class="uni-media-list-body">
@@ -35,7 +35,10 @@
             uni.showLoading();
             let readerInfo = service.getUsers();
             this.openid = readerInfo.openid;
-            this.get_history(readerInfo.openid);
+            this.get_history();
+        },
+        onPullDownRefresh() {
+            this.get_history();
         },
         methods: {
             get_history() {
@@ -51,18 +54,34 @@
                 	fail: () => {},
                 	complete: () => {
                         uni.hideLoading();
+                        uni.stopPullDownRefresh();
                     }
                 });
             },
-            goInfo(e) {
-            	let detail = {
-            		comic_id: e.comic_id,
-            		title: e.title
-            	}
-            	uni.navigateTo({
-            		url: "../comic-info/comic-info?detailData=" + JSON.stringify(detail)
-            	})
-            },
+            reading(e) {
+                console.log(e);
+            	uni.request({
+            		url: this.$requestUrl+'get_reading_chapter',
+            		method: 'GET',
+            		data: {
+            			comic_id: e.comic_id,
+            			openid: this.openid
+            		},
+            		success: res => {
+            			let detail = {
+            				comic_id: e.comic_id,
+            				title: e.title,
+            				cover: e.cover,
+            				chapter: res.data.data
+            			}
+            			uni.navigateTo({
+            				url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
+            			})
+            		},
+            		fail: () => {},
+            		complete: () => {}
+            	});
+            }
         },
         onShareAppMessage() {
         	return {
