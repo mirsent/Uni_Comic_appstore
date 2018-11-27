@@ -93,9 +93,7 @@
             </view>
         </view>
         
-        <modalShare @close="closeModal" @note="noteShare">
-            
-        </modalShare>
+        <button class="login-btn" open-type="getUserInfo" v-if="!authed" @getuserinfo="login"></button>
 	</view>
 </template>
 
@@ -109,13 +107,7 @@
         },
 		data() {
 			return {
-                // modal
-                titleText: '',
-                contentText: '',
-                cancelText: '取消',
-                confirmText: '确定',
-                modalShow: false,
-                noteShow: true,
+                authed: false,
                 
                 // 分享章节封面
                 shareChapter: '',
@@ -133,6 +125,15 @@
 		},
         onLoad(e) {
             uni.showLoading();
+            let _this = this;
+            
+            wx.getSetting({
+            	success (res){
+            		if (res.authSetting['scope.userInfo']) {
+            			_this.authed = true;
+            		}
+            	}
+            })
             
             let readerInfo = service.getUsers();
             this.openid = readerInfo.openid;
@@ -144,36 +145,50 @@
             
             this.getComicInfo(info.comic_id, readerInfo.openid);
         },
-        onShow() {
-            if (this.needShare == 1) {
-                // 达成分享条件
-            	this.modalShow = false;
-            } else {
-                // 改变条件显示
-                this.needShare = this.needShare-1;
-                this.contentText = '转发'+this.needShare+'名好友即可阅读';
-            }
-        },
-        onHide() {
-        	if (this.modalShow) {
-        		this.noteShare();
-        	}
-        },
         methods: {
-            noteShare(){
-                // 记录分享次数
-                this.noteShow = false;
+            login(e) {
+            	if (e.detail.errMsg == 'getUserInfo:ok') {
+                    uni.login({
+                    	provider: 'weixin',
+                    	success: res => {
+                    		uni.request({
+                    			url: this.$requestUrl+'code_2_session',
+                    			method: 'GET',
+                    			data: {
+                    				js_code: res.code
+                    			},
+                    			success: res => {
+                    				let readerInfo = res.data.data;
+                    				service.addUser(readerInfo);
+                                    this.editReader(e.detail.userInfo.nickName, e.detail.userInfo.avatarUrl);
+                    			},
+                    			fail: () => {},
+                    			complete: () => {}
+                    		});
+                    	}
+                    });
+            	}
+            },
+            editReader(nickName, avatarUrl){
                 uni.request({
-                	url: this.$requestUrl+'share_help',
-                	method: 'GET',
+                	url: this.$requestUrl+'edit_reader',
+                	method: 'POST',
+                	header: {
+                		'content-type': 'application/x-www-form-urlencoded'
+                	},
                 	data: {
-                        comic_id: this.comic.comic_id,
-                        chapter: this.shareChapter,
-                        openid: this.openid
-                    },
+                		openid: this.openid,
+                		nickname: nickName,
+                		head: avatarUrl 
+                	},
                 	success: res => {
-                        console.log(res);
-                    }
+                		this.authed = true;
+                		this.readerInfo = res.data.data;
+                		uni.showToast({
+                			title: '登录成功',
+                			duration: 1500
+                		});
+                	}
                 });
             },
             getComicInfo(comicId, openid){
@@ -221,118 +236,38 @@
             },
             reading() {
                 // 直接阅读
-                let _this = this;
-                wx.getSetting({
-                	success (res){
-                		if (res.authSetting['scope.userInfo']) {
-                            uni.request({
-                            	url: _this.$requestUrl+'get_reading_chapter',
-                            	method: 'GET',
-                            	data: {
-                            		comic_id: _this.comic.comic_id,
-                            		openid: _this.openid
-                            	},
-                            	success: res => {
-                            		let detail = {
-                            			comic_id: _this.comic.comic_id,
-                            			title: _this.comic.title,
-                                        cover: _this.comic.cover,
-                            			chapter: res.data.data
-                            		}
-                            		uni.navigateTo({
-                            			url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
-                            		})
-                            	},
-                            	fail: () => {},
-                            	complete: () => {}
-                            });
-                		} else {
-                            uni.showModal({
-                                title: '提醒',
-                                content: '请先登录',
-                                success: function (res) {
-                                    if (res.confirm) {
-                                        uni.reLaunch({
-                                        	url: '../my/my'
-                                        });
-                                    }
-                                }
-                            });
-                        }
-                	}
-                })
+                uni.request({
+                	url: this.$requestUrl+'get_reading_chapter',
+                	method: 'GET',
+                	data: {
+                		comic_id: this.comic.comic_id,
+                		openid: this.openid
+                	},
+                	success: res => {
+                		let detail = {
+                			comic_id: this.comic.comic_id,
+                			title: this.comic.title,
+                			cover: this.comic.cover,
+                			chapter: res.data.data
+                		}
+                		uni.navigateTo({
+                			url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
+                		})
+                	},
+                	fail: () => {},
+                	complete: () => {}
+                });
             },
             readingChoose(e) {
                 // 选章阅读
-                let _this = this;
-                wx.getSetting({
-                	success (res){
-                		if (res.authSetting['scope.userInfo']) {
-                            let detail = {
-                            	comic_id: _this.comic.comic_id,
-                            	title: _this.comic.title,
-                            	cover: _this.comic.cover,
-                            	chapter: e.catalog, // 选择章节
-                            }
-                            uni.navigateTo({
-                            	url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
-                            })
-//                             uni.showLoading();
-//                             uni.request({
-//                             	url: _this.$requestUrl+'check_auth',
-//                             	method: 'GET',
-//                             	data: {
-//                                     comic_id: _this.comic.comic_id,
-//                                     chapter: e.catalog,
-//                                     openid: _this.openid
-//                                 },
-//                             	success: res => {
-//                                     if (res.data.status == '-2') {
-//                                     	uni.showToast({
-//                                     		title: '付费阅读',
-//                                             icon: 'none',
-//                                             duration: 2000
-//                                     	});
-//                                     }else if (res.data.status == '-1') {
-//                                         // 限制阅读
-//                                         let comicInfo = res.data.data;
-//                                         _this.needShare = comicInfo.need_share;
-//                                         _this.titleText = '精彩章节订阅';
-//                                         _this.contentText = '转发'+_this.needShare+'名好友即可阅读';
-//                                         _this.shareCover = comicInfo.chapter_cover; // 章节封面
-//                                         _this.shareChapter = e.catalog; // 需要解除限制的章节
-//                                     	_this.modalShow = true;
-//                                     } else {
-//                                         let detail = {
-//                                         	comic_id: _this.comic.comic_id,
-//                                         	title: _this.comic.title,
-//                                             cover: _this.comic.cover,
-//                                         	chapter: e.catalog, // 选择章节
-//                                         }
-//                                         uni.navigateTo({
-//                                         	url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
-//                                         })
-//                                     }
-//                                 },
-//                             	fail: () => {},
-//                             	complete: () => {
-//                                     uni.hideLoading();
-//                                 }
-                            // });
-                		} else {
-                			uni.showModal({
-                				title: '提醒',
-                				content: '请先登录',
-                				success: function (res) {
-                					if (res.confirm) {
-                						uni.reLaunch({
-                							url: '../my/my'
-                						});
-                					}
-                				}
-                			});
-                		}
-                	}
+                let detail = {
+                	comic_id: this.comic.comic_id,
+                	title: this.comic.title,
+                	cover: this.comic.cover,
+                	chapter: e.catalog, // 选择章节
+                }
+                uni.navigateTo({
+                	url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
                 })
             },
             like() {
@@ -453,9 +388,6 @@
                 uni.pageScrollTo({
                 	scrollTop: 0,
                 })
-            },
-            closeModal() {
-            	this.modalShow = false;
             }
         },
         onShareAppMessage(res) {
@@ -467,14 +399,6 @@
                 comic_id: this.comic.comic_id,
                 title: title
             }
-            
-        	if (res.from === 'button') {
-                // 限制阅读分享
-                detail.share_chapter = this.shareChapter; // 开通章节
-                detail.help = 1;
-                imageUrl = this.shareCover;
-        	}
-            console.log(JSON.stringify(detail));
             return {
             	title: title,
             	imageUrl: imageUrl,
@@ -687,5 +611,17 @@
     .go-top image{
         width: 60upx;
         height: 60upx;
+    }
+    
+    .login-btn{
+    	position: fixed;
+    	top: 0;
+    	bottom: 0;
+    	left: 0;
+    	right: 0;
+    	background: none;
+    }
+    .login-btn:after{
+    	border: 0;
     }
 </style>

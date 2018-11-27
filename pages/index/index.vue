@@ -57,28 +57,28 @@
 		},
 		methods: {
             login(e) {
-                uni.request({
-                	url: this.$requestUrl+'edit_reader',
-                	method: 'POST',
-                	header: {
-                		'content-type': 'application/x-www-form-urlencoded'
-                	},
-                	data: {
-                		openid: this.openid,
-                		nickname: e.detail.userInfo.nickName,
-                		head: e.detail.userInfo.avatarUrl
-                	},
-                	success: res => {
-                		this.authed = true;
-                		this.readerInfo = res.data.data;
-                		uni.showToast({
-                			title: '登录成功',
-                			duration: 1500
-                		});
-                	},
-                	fail: () => {},
-                	complete: () => {}
-                });
+                if (e.errMsg == 'getUserInfo:ok') {
+                	uni.request({
+                		url: this.$requestUrl+'edit_reader',
+                		method: 'POST',
+                		header: {
+                			'content-type': 'application/x-www-form-urlencoded'
+                		},
+                		data: {
+                			openid: this.openid,
+                			nickname: e.detail.userInfo.nickName,
+                			head: e.detail.userInfo.avatarUrl
+                		},
+                		success: res => {
+                			this.authed = true;
+                			this.readerInfo = res.data.data;
+                			uni.showToast({
+                				title: '登录成功',
+                				duration: 1500
+                			});
+                		}
+                	});
+                }
             },
 			getBanner() {
 				uni.request({
