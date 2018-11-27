@@ -622,11 +622,11 @@
     .status{
         color: #919191;
         display: flex;
+        justify-content: space-between;
     }
     .status-item{
         display: flex;
         align-items: center;
-        margin-right: 20px;
     }
     .status-item .icon{
         width: 30upx;

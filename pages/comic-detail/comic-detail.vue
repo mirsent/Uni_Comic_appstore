@@ -1,15 +1,19 @@
 <template>
 	<view class="page">
         <view class="article-content">
-        	<image v-for="(img, index) in imgs" :key="index" lazy-load :src="imgPrefix+img" mode="widthFix"></image>
+        	<image lazy-load :src="imgPrefix+img" mode="widthFix"
+                 v-for="(img, index) in imgs" :key="index"
+                 :class="{hide: needRelease && index > 1}">
+            </image>
         </view>
-        <view class="btn-group">
+        <view class="btn-group" v-show="isLoaded">
         	<picker class="picker-item" mode="selector" :range="chapterData" :value="chapterIndex" range-key="catalog_name"
         	@change="chapterChange">
         		<button type="default">目录</button>
         	</picker>
-        	<button type="default" @tap="prev">上一章</button>
-        	<button type="default" @tap="next">下一章</button>
+        	<button type="default" v-if="chapter != 1" @tap="prev">上一章</button>
+        	<button type="default" v-if="chapter != chapterLast" @tap="next">下一章</button>
+        	<button type="default" v-if="chapter == chapterLast" @tap="home">回到首页</button>
         </view>
         
         
@@ -20,19 +24,17 @@
         			<view class="box-header">
         				① 金币解锁
         			</view>
-        			<view class="title">需支付<text>50金币</text></view>
+        			<view class="title">需支付<text>{{needPay}}金币</text></view>
         			<button class="btn">充值并解锁</button>
         		</view>
         		<view class="auth-box">
         			<view class="box-header">
         				② 转发解锁
         			</view>
-        			<button class="btn">转发2名好友</button>
+        			<button open-type="share" class="btn">转发{{needShare}}名好友</button>
         		</view>
         	</view>
         </view>
-        
-        <modalShare @close="closeModal" @note="noteShare"></modalShare>
 	</view>
 </template>
 
@@ -45,29 +47,26 @@
         },
 		data() {
 			return {
-                // modal
-                titleText: '',
-                contentText: '',
-                cancelText: '取消',
-                confirmText: '确定',
-                modalShow: false,
-                noteShow: true,
+                openid: '',
+                imgPrefix: '',
+                comicId: '',
+                chapter: '',
+                title: '',
+                cover: '',
+                chapterIndex: '',
+                chapterData: [],
+                chapterLast: '',
+                imgs: [],
+                isLoaded: false,
                 
-                // 分享
                 shareCover: '',
-                shareChapter: '',
                 
-                // 验证权限
-                needRelease: false,
-                showRelease: false,
-                canChoose: true,
-                
-				openid: '',
-				imgPrefix: '',
-				comic: {},
-				chapterIndex: '',
-				chapterData: [],
-				imgs: []
+                needRelease: false, // 需要解锁
+                showRelease: false, 
+                canChoose: true, // 2条途径
+                chooseShare: false, // 选分享解锁
+                needPay: '', // 需支付
+                needShare: '', // 需转发数
 			}
 		},
 		onLoad(e) {
@@ -78,268 +77,186 @@
 			this.imgPrefix = this.$imgUrl; // 图片前缀
 
 			let comicInfo = JSON.parse(e.detailData);
-			this.comic = comicInfo;
-
+			this.comicId = comicInfo.comic_id;
+            this.chapter = comicInfo.chapter;
+            this.title = comicInfo.title;
+            this.cover = comicInfo.cover;
 			this.chapterIndex = comicInfo.chapter - 1; //picker选中项
 
 			this.reading();
             this.checkAuth();
-			this.get_chapter(); // 获取目录
+			this.getChapter(); // 获取目录
 		},
         onShow() {
-        	if (this.needShare == 1) {
-        		// 达成分享条件
-        		this.modalShow = false;
-        	} else {
-        		// 改变条件显示
-        		this.needShare = this.needShare-1;
-        		this.contentText = '转发'+this.needShare+'名好友即可阅读';
-        	}
+        	this.checkAuth();
+            this.chooseShare = false;
         },
         onHide() {
-        	if (this.modalShow) {
+        	if (this.chooseShare) {
         		this.noteShare();
         	}
         },
-        onPageScroll(e) {
-            if (e.scrollTop > 300 && this.needRelease) {
+        onReachBottom(){
+            if (this.needRelease) {
             	this.showRelease = true;
             }
         },
 		methods: {
+            reading() {
+            	uni.request({
+            		url: this.$requestUrl + 'reading',
+            		method: 'GET',
+            		data: {
+            			comic_id: this.comicId,
+            			chapter: this.chapter,
+            			openid: this.openid,
+            			channel: 2
+            		},
+            		success: (res) => {
+            			let comicInfo = res.data.data;
+            			uni.setNavigationBarTitle({
+            				title: this.title + ' ' + comicInfo.chapter_title
+            			})
+                        this.shareCover = comicInfo.share_cover;
+            			this.imgs = comicInfo.imgs;
+            		},
+            		fail: () => {
+            			console.log('呀，当前网络状况不好');
+            		},
+            		complete: () => {
+                        this.isLoaded = true;
+            			uni.hideLoading();
+            		}
+            	})
+            },
+            checkAuth() {
+            	// 验证权限
+            	uni.request({
+            		url: this.$requestUrl+'check_auth',
+            		method: 'GET',
+            		data: {
+            			comic_id: this.comicId,
+            			chapter: this.chapter,
+            			openid: this.openid
+            		},
+            		success: res => {
+            			let info = res.data.data;
+            			let status = res.data.status;
+                        console.log(res);
+                        if (status == 1) {
+                            this.needRelease = false;
+                        	this.showRelease = false;
+                        }else if (status == '-2') {
+            				// 支付
+            				this.needRelease = true;
+            				this.canChoose = false;
+                            
+                            this.needPay = info.need_pay;
+            			} else if (status == '-1') {
+            				// 支付 或 分享
+            				this.needRelease = true;
+                            
+                            this.needShare = info.need_share;
+                            this.needPay = info.need_pay;
+            			}
+            		}
+            	});
+            },
+            // 记录分享次数
             noteShare(){
-            	// 记录分享次数
-            	this.noteShow = false;
             	uni.request({
             		url: this.$requestUrl+'share_help',
             		method: 'GET',
             		data: {
-            			comic_id: this.comic.comic_id,
-            			chapter: this.shareChapter,
+            			comic_id: this.comicId,
+            			chapter: this.chapter,
             			openid: this.openid
             		},
             		success: res => {
-            			console.log(res);
+            			console.log(res.data);
             		}
             	});
             },
-			get_chapter() {
+			getChapter() {
 				uni.request({
 					url: this.$requestUrl + 'get_comic_chapter',
 					method: 'GET',
 					data: {
-						comic_id: this.comic.comic_id
+						comic_id: this.comicId
 					},
 					success: res => {
-						this.chapterData = res.data.data;
-					},
-					fail: () => {},
-					complete: () => {
-						uni.hideLoading();
+                        let chapterInfo = res.data.data;
+                        this.chapterLast = chapterInfo.length;
+						this.chapterData = chapterInfo;
 					}
 				});
 			},
-			reading() {
-				uni.request({
-					url: this.$requestUrl + 'reading',
-					method: 'GET',
-					data: {
-						comic_id: this.comic.comic_id,
-						chapter: this.comic.chapter,
-						openid: this.openid
-					},
-					success: (res) => {
-						let comicInfo = res.data.data;
-						uni.setNavigationBarTitle({
-							title: this.comic.title + ' ' + comicInfo.chapter_title
-						})
-						this.imgs = comicInfo.comics;
-					},
-					fail: () => {
-						console.log('fail');
-					},
-					complete: () => {
-						uni.hideLoading();
-					}
-				})
-			},
             prev() {
+                let prevChapter = parseInt(this.chapter) - 1;
+                this.redirectTo(prevChapter);
+            },
+			next() {
+                let nextChapter = parseInt(this.chapter) + 1;
+                this.redirectTo(nextChapter);
+			},
+			chapterChange(e) {
+				let chapterCur = parseInt(e.detail.value) + 1;
+                this.redirectTo(chapterCur);
+			},
+            home() {
+                uni.reLaunch({
+                    url: '../index/index'
+                });
+            },
+            redirectTo(chapter){
                 let detail = {
-                    'comic_id': 1,
-                    'title': '23',
-                    'chapter': 1
+                	comic_id: this.comicId,
+                	title: this.title,
+                	cover: this.cover,
+                	chapter: chapter
                 }
                 uni.redirectTo({
                 	url: "../comic-detail/comic-detail?detailData=" + JSON.stringify(detail)
                 });
-            },
-			next() {
-                this.readingNext(this.comic.comic_id, this.comic.chapter, this.openid);
-			},
-			chapterChange(e) {
-				let chapterCur = parseInt(e.detail.value);
-                this.readingNext(this.comic.comic_id, chapterCur, this.openid);
-			},
-			readingNext(comicId, chapter, openid) {
-                uni.showLoading();
-				uni.request({
-					url: this.$requestUrl + 'reading_next',
-					method: 'GET',
-					data: {
-						comic_id: comicId,
-						chapter: chapter,
-						openid: openid
-					},
-					success: (res) => {
-                        if (res.data.status == '-2') {
-                        	uni.showToast({
-                        		title: '付费阅读',
-                        		icon: 'none',
-                        		duration: 2000
-                        	});
-                        }else if (res.data.status == '-1') {
-                            // 限制阅读
-                            let comicInfo = res.data.data;
-                            this.needShare = comicInfo.need_share;
-							this.titleText = '精彩章节订阅';
-							this.contentText = '转发'+this.needShare+'名好友即可阅读';
-                            this.shareCover = comicInfo.chapter_cover; // 章节封面
-                            this.shareChapter = parseInt(chapter)+1; // 需要解除限制的章节
-							this.modalShow = true;
-						} else {
-							let comicInfo = res.data.data;
-							uni.setNavigationBarTitle({
-								title: this.comic.title + ' ' + comicInfo.chapter_title
-							})
-							this.comic.chapter = parseInt(this.comic.chapter) + 1;
-                            this.chapterIndex = chapter; // picker选中项
-							this.imgs = this.imgs.concat(comicInfo.comics);
-						}
-					},
-					fail: () => {
-						console.log('fail');
-					},
-					complete: () => {
-						uni.hideLoading();
-					}
-				})
-			},
-            closeModal() {
-                this.modalShow = false;
-            },
-            checkAuth() {
-                // 验证权限
-                uni.request({
-                	url: this.$requestUrl+'check_auth',
-                	method: 'GET',
-                	data: {
-                		comic_id: this.comic.comic_id,
-                		chapter: this.comic.chapter,
-                		openid: this.openid
-                	},
-                	success: res => {
-                		let status = res.data.status;
-                        if (status == '-2') {
-                        	this.needRelease = true;
-                            this.canChoose = false;
-                        } else if (status == '-1') {
-                        	this.needRelease = true;
-                        }
-                	},
-                	fail: () => {},
-                	complete: () => {
-                		uni.hideLoading();
-                	}
-                });
             }
 		},
         onShareAppMessage(res) {
-        	let title = this.comic.title;
-        	let imageUrl = this.comic.cover;
+        	let title = this.title;
+        	let imageUrl = this.cover;
             
             let detail = {
-            	openid: this.openid,
-            	comic_id: this.comic.comic_id,
+            	share_openid: this.openid, // 记录上级
+            	comic_id: this.comicId,
             	title: title
             }
             
         	if (res.from === 'button') {
         		// 限制阅读分享
-        		detail.share_chapter = this.shareChapter; // 开通章节
+        		detail.share_chapter = this.chapter;
                 detail.help = 1;
-        		imageUrl = this.shareCover;
+                imageUrl = this.shareCover;
+                
+                this.chooseShare = true;
         	}
-            console.log(JSON.stringify(detail));
+            console.log('分享参数：'+JSON.stringify(detail));
         	return {
         		title: title,
         		imageUrl: imageUrl,
-        		path: '/pages/comic-info/comic-info?detailData=' + JSON.stringify(detail),
+        		path: '/pages/comic-info/comic-info?detailData=' + JSON.stringify(detail)
         	}
         },
 	}
 </script>
 
 <style>
-    .mask{
-        background-color: transparent;
-    }
-    .auth{
-        padding: 20px;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 500upx;
-        background-image: linear-gradient(to bottom, rgba(255,255,255,0.9), #FFF);
-    }
-    .auth .box-header{
-        font-size: 28upx;
-        color: #919191;
-    }
-    .auth .brief{
-        font-size: 28upx;
-        color: #919191;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 10px;
-    }
-    .auth .brief:before,
-    .auth .brief:after {
-        content: '';
-        display: block;
-        width: 200upx;
-        height: 1px;
-        background-color: #CCC;
-    }
-    .auth .title{
-        font-size: 42upx;
-        text-align: center;
-        margin-bottom: 10px;
-    }
-    .auth .title text{
-        color: #E27C6B;
-    }
-    
-    .auth .btn{
-        font-size: 32upx;
-        height: 90upx;
-        line-height: 90upx;
-        border-radius: 90upx;
-        background: linear-gradient(to right, #FFE153, #FFC11F);
-    }
-    .auth .btn:before,
-    .auth .btn:after{
-        border: 0;
-    }
-    
-    
-    
-    
 	.page {
 		background: #efeff4;
 		padding: 0 10upx;
 	}
+    
+    .hide{
+        display: none;
+    }
 
 	.article-meta {
 		padding: 20upx 40upx;
@@ -382,4 +299,57 @@
 		margin-left: 0;
 		margin-right: 0;
 	}
+    
+    .mask{
+    	background-color: transparent;
+    }
+    .auth{
+    	padding: 20px;
+    	position: fixed;
+    	bottom: 0;
+    	left: 0;
+    	right: 0;
+    	height: 500upx;
+    	background-image: linear-gradient(to bottom, rgba(255,255,255,0.9), #FFF);
+    }
+    .auth .box-header{
+    	font-size: 28upx;
+    	color: #919191;
+    }
+    .auth .brief{
+    	font-size: 28upx;
+    	color: #919191;
+    	display: flex;
+    	justify-content: space-between;
+    	align-items: center;
+    	margin-bottom: 10px;
+    }
+    .auth .brief:before,
+    .auth .brief:after {
+    	content: '';
+    	display: block;
+    	width: 200upx;
+    	height: 1px;
+    	background-color: #CCC;
+    }
+    .auth .title{
+    	font-size: 42upx;
+    	text-align: center;
+    	margin-bottom: 10px;
+    }
+    .auth .title text{
+    	color: #E27C6B;
+    }
+    
+    .auth .btn{
+    	font-size: 32upx;
+    	height: 90upx;
+    	line-height: 90upx;
+    	border-radius: 90upx;
+    	background: linear-gradient(to right, #FFE153, #FFC11F);
+    }
+    .auth .btn:before,
+    .auth .btn:after{
+    	border: 0;
+    }
 </style>
