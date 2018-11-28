@@ -56,7 +56,7 @@
 		methods: {
 			getType() {
 				uni.request({
-					url: this.$requestUrl + 'get_comic_type',
+					url: this.$requestUrl+'Comic/get_comic_type',
 					method: 'GET',
 					success: res => {
 						let typeInfo = res.data;
@@ -71,7 +71,7 @@
 					'type': type
 				};
 				uni.request({
-					url: this.$requestUrl + 'get_comic_list',
+					url: this.$requestUrl+'Comic/get_comic_list',
 					data: data,
 					success: (data) => {
 						let comicInfo = data.data;

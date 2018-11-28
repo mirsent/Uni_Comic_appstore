@@ -49,7 +49,7 @@
                     return
                 }
                 uni.request({
-                	url: this.$requestUrl+'comment',
+                	url: this.$requestUrl+'Comic/comment',
                 	method: 'POST',
                 	header: {
                 		'content-type': 'application/x-www-form-urlencoded'

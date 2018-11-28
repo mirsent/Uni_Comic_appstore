@@ -199,7 +199,7 @@
 						provider: 'weixin',
 						success: res => {
 							uni.request({
-								url: this.$requestUrl + 'code_2_session',
+								url: this.$requestUrl+'Comic/code_2_session',
 								method: 'GET',
 								data: {
 									js_code: res.code
@@ -218,7 +218,7 @@
 			},
 			editReader(nickName, avatarUrl) {
 				uni.request({
-					url: this.$requestUrl + 'edit_reader',
+					url: this.$requestUrl+'Comic/edit_reader',
 					method: 'POST',
 					header: {
 						'content-type': 'application/x-www-form-urlencoded'
@@ -240,7 +240,7 @@
 			},
 			getComicInfo() {
 				uni.request({
-					url: this.$requestUrl + 'get_comic_info',
+					url: this.$requestUrl+'Comic/get_comic_info',
 					method: 'GET',
 					data: {
 						comic_id: this.comicId,
@@ -258,7 +258,7 @@
             // 评论
             getCommentInfo() {
                 uni.request({
-                	url: this.$requestUrl+'get_comment',
+                	url: this.$requestUrl+'Comic/get_comment',
                 	method: 'GET',
                 	data: {
                         comic_id: this.comicId
@@ -278,7 +278,7 @@
 				if (!this.isChapterLoad) {
 					uni.showLoading();
 					uni.request({
-						url: this.$requestUrl + 'get_comic_chapter',
+						url: this.$requestUrl+'Comic/get_comic_chapter',
 						method: 'GET',
 						data: {
 							comic_id: this.comic.comic_id
@@ -297,7 +297,7 @@
 			reading() {
 				// 直接阅读
 				uni.request({
-					url: this.$requestUrl + 'get_reading_chapter',
+					url: this.$requestUrl+'Comic/get_reading_chapter',
 					method: 'GET',
 					data: {
 						comic_id: this.comic.comic_id,
@@ -332,7 +332,7 @@
 			},
 			like() {
 				uni.request({
-					url: this.$requestUrl + 'like',
+					url: this.$requestUrl+'Comic/like',
 					method: 'POST',
 					header: {
 						'content-type': 'application/x-www-form-urlencoded'
@@ -363,7 +363,7 @@
 			},
 			cancelLike() {
 				uni.request({
-					url: this.$requestUrl + 'cancel_like',
+					url: this.$requestUrl+'Comic/cancel_like',
 					method: 'GET',
 					data: {
 						comic_id: this.comic.comic_id,
@@ -390,7 +390,7 @@
 			},
 			collect() {
 				uni.request({
-					url: this.$requestUrl + 'collect',
+					url: this.$requestUrl+'Comic/collect',
 					method: 'POST',
 					header: {
 						'content-type': 'application/x-www-form-urlencoded'
@@ -421,7 +421,7 @@
 			},
 			cancelCollect() {
 				uni.request({
-					url: this.$requestUrl + 'cancel_collect',
+					url: this.$requestUrl+'Comic/cancel_collect',
 					method: 'GET',
 					data: {
 						comic_id: this.comic.comic_id,

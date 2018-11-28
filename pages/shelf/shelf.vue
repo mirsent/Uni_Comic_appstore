@@ -43,7 +43,7 @@
         methods: {
             get_history() {
                 uni.request({
-                	url: this.$requestUrl+'get_history_info',
+                	url: this.$requestUrl+'Comic/get_history_info',
                 	method: 'GET',
                 	data: {
                         openid: this.openid
@@ -61,7 +61,7 @@
             reading(e) {
                 console.log(e);
             	uni.request({
-            		url: this.$requestUrl+'get_reading_chapter',
+            		url: this.$requestUrl+'Comic/get_reading_chapter',
             		method: 'GET',
             		data: {
             			comic_id: e.comic_id,

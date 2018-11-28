@@ -57,9 +57,9 @@
 		},
 		methods: {
             login(e) {
-                if (e.errMsg == 'getUserInfo:ok') {
+                if (e.detail.errMsg == 'getUserInfo:ok') {
                 	uni.request({
-                		url: this.$requestUrl+'edit_reader',
+                		url: this.$requestUrl+'Comic/edit_reader',
                 		method: 'POST',
                 		header: {
                 			'content-type': 'application/x-www-form-urlencoded'
@@ -82,7 +82,7 @@
             },
 			getBanner() {
 				uni.request({
-					url: this.$requestUrl + 'get_comic_banner',
+					url: this.$requestUrl+'Comic/get_comic_banner',
 					method: 'GET',
 					success: res => {
 						this.bannerData = res.data.data;
@@ -93,7 +93,7 @@
 			},
 			getProduct() {
 				uni.request({
-					url: this.$requestUrl + 'get_comic_list',
+					url: this.$requestUrl+'Comic/get_comic_list',
 					method: 'GET',
                     data: {
                         type: '-1'
@@ -130,13 +130,14 @@
                 	provider: 'weixin',
                 	success: res => {
                         uni.request({
-                        	url: this.$requestUrl+'code_2_session',
+                        	url: this.$requestUrl+'Comic/code_2_session',
                         	method: 'GET',
                         	data: {
                                 js_code: res.code
                             },
                         	success: res => {
                                 let readerInfo = res.data.data;
+                                console.log(readerInfo);
                                 service.addUser(readerInfo);
                             },
                         	fail: () => {},

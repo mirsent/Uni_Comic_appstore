@@ -116,7 +116,7 @@
 		methods: {
             reading() {
             	uni.request({
-            		url: this.$requestUrl + 'reading',
+            		url: this.$requestUrl+'Comic/reading',
             		method: 'GET',
             		data: {
             			comic_id: this.comicId,
@@ -144,7 +144,7 @@
             checkAuth() {
             	// 验证权限
             	uni.request({
-            		url: this.$requestUrl+'check_auth',
+            		url: this.$requestUrl+'Comic/check_auth',
             		method: 'GET',
             		data: {
             			comic_id: this.comicId,
@@ -193,7 +193,7 @@
             // 记录分享次数
             noteShare(){
             	uni.request({
-            		url: this.$requestUrl+'share_help',
+            		url: this.$requestUrl+'Comic/share_help',
             		method: 'GET',
             		data: {
             			comic_id: this.comicId,
@@ -208,7 +208,7 @@
             unlock(){
                 uni.showLoading();
                 uni.request({
-                	url: this.$requestUrl+'unlock',
+                	url: this.$requestUrl+'Comic/unlock',
                 	method: 'POST',
                 	header: {
                 		'content-type': 'application/x-www-form-urlencoded'
@@ -239,7 +239,7 @@
             },
             getReader(){
                 uni.request({
-                	url: this.$requestUrl+'get_reader',
+                	url: this.$requestUrl+'Comic/get_reader',
                 	method: 'GET',
                 	data: {
                         openid: this.openid
@@ -251,7 +251,7 @@
             },
 			getChapter() {
 				uni.request({
-					url: this.$requestUrl + 'get_comic_chapter',
+					url: this.$requestUrl+'Comic/get_comic_chapter',
 					method: 'GET',
 					data: {
 						comic_id: this.comicId

@@ -17,6 +17,17 @@
 		</view>
 		
 		<view class="uni-list">
+            <view class="uni-list-cell">
+            	<view class="uni-list-cell-navigate">
+            		<view class="left">
+            			<image src="../../static/image/score.png" class="icon"></image>
+            			积分
+            		</view>
+                    <view class="right">
+                    	{{readerInfo.balance}}
+                    </view>
+            	</view>
+            </view>
 			<view class="uni-list-cell" v-for="(list,index) in listData" :key="index">
 				<view class="uni-list-cell-navigate uni-navigate-right" @tap="custom(list.event)">
 					<view class="left">
@@ -47,14 +58,14 @@
                         event: 'recharge'
                     },
                     {
-                        title: '积分',
-                        icon: '../../static/image/score.png',
-                        event: 'integral'
+                    	title: '充值记录',
+                    	icon: '../../static/image/pay.png',
+                        event: 'getRechargeNote'
                     },
                     {
                     	title: '消费记录',
                     	icon: '../../static/image/pay.png',
-                        event: 'consume'
+                        event: 'getConsumeNote'
                     }
                 ]
 			};
@@ -75,28 +86,30 @@
         },
         methods: {
             login(e) {
-                uni.request({
-                	url: this.$requestUrl+'edit_reader',
-                	method: 'POST',
-                    header: {
-                        'content-type': 'application/x-www-form-urlencoded'
-                    },
-                	data: {
-                		openid: this.openid,
-                		nickname: e.detail.userInfo.nickName,
-                        head: e.detail.userInfo.avatarUrl
-                	},
-                	success: res => {
-                        this.authed = true;
-                        this.readerInfo = res.data.data;
-                        uni.showToast({
-                        	title: '登录成功',
-                        	duration: 1500
-                        });
-                    },
-                	fail: () => {},
-                	complete: () => {}
-                });
+                if (e.detail.errMsg == 'getUserInfo:ok') {
+                    uni.request({
+                    	url: this.$requestUrl+'Comic/edit_reader',
+                    	method: 'POST',
+                    	header: {
+                    		'content-type': 'application/x-www-form-urlencoded'
+                    	},
+                    	data: {
+                    		openid: this.openid,
+                    		nickname: e.detail.userInfo.nickName,
+                    		head: e.detail.userInfo.avatarUrl
+                    	},
+                    	success: res => {
+                    		this.authed = true;
+                    		this.readerInfo = res.data.data;
+                    		uni.showToast({
+                    			title: '登录成功',
+                    			duration: 1500
+                    		});
+                    	},
+                    	fail: () => {},
+                    	complete: () => {}
+                    });
+                }
             },
             custom(e) {
                 this[e]()
@@ -113,10 +126,14 @@
                 	title: '期待吗'
                 })
             },
-            consume() {
-                uni.showToast({
-                	icon: 'none',
-                	title: '期待吗'
+            getRechargeNote() {
+                uni.navigateTo({
+                	url: "../note-recharge/note-recharge"
+                })
+            },
+            getConsumeNote() {
+                uni.navigateTo({
+                	url: "../note-consume/note-consume"
                 })
             }
         },
