@@ -19,20 +19,29 @@
         
         <view class="mask" v-if="showRelease" :catchtouchmove="false">
         	<view class="auth">
-        		<view class="brief">解锁后继续阅读</view>
-        		<view class="auth-box">
-        			<view class="box-header">
-        				① 金币解锁
+        		<view class="auth-body">
+        			<view class="brief">解锁后继续阅读</view>
+        			<view class="auth-box">
+        				<view class="box-header">
+        					① 金币解锁
+        				</view>
+        				<view class="title">需支付<text>{{needPay}}金币</text></view>
+        				<view class="balanse" v-if="!hasBalanse">
+        					余额不足，请充值
+        				</view>
+        				<button class="btn" v-if="hasBalanse" @tap="unlock">解锁</button>
+        				<button class="btn" v-else @tap="recharge">充值并解锁</button>
         			</view>
-        			<view class="title">需支付<text>{{needPay}}金币</text></view>
-        			<button class="btn">充值并解锁</button>
-        		</view>
-        		<view class="auth-box">
-        			<view class="box-header">
-        				② 转发解锁
+        			<view class="auth-box">
+        				<view class="box-header">
+        					② 转发解锁
+        				</view>
+        				<button open-type="share" class="btn">转发{{needShare}}名好友</button>
         			</view>
-        			<button open-type="share" class="btn">转发{{needShare}}名好友</button>
         		</view>
+                <view class="auth-footer">
+                	账户余额：{{balance}}金币
+                </view>
         	</view>
         </view>
 	</view>
@@ -53,6 +62,7 @@
                 chapter: '',
                 title: '',
                 cover: '',
+                balance: '',
                 chapterIndex: '',
                 chapterData: [],
                 chapterLast: '',
@@ -64,6 +74,7 @@
                 needRelease: false, // 需要解锁
                 showRelease: false, 
                 canChoose: true, // 2条途径
+                hasBalanse: true,
                 chooseShare: false, // 选分享解锁
                 needPay: '', // 需支付
                 needShare: '', // 需转发数
@@ -89,6 +100,7 @@
 		},
         onShow() {
         	this.checkAuth();
+            this.getReader();
             this.chooseShare = false;
         },
         onHide() {
@@ -142,22 +154,39 @@
             		success: res => {
             			let info = res.data.data;
             			let status = res.data.status;
-                        if (status == 1) {
-                            this.needRelease = false;
-                        	this.showRelease = false;
-                        }else if (status == '-2') {
-            				// 支付
-            				this.needRelease = true;
-            				this.canChoose = false;
-                            
-                            this.needPay = info.need_pay;
-            			} else if (status == '-1') {
-            				// 支付 或 分享
-            				this.needRelease = true;
-                            
-                            this.needShare = info.need_share;
-                            this.needPay = info.need_pay;
-            			}
+                        
+                        console.log(res.data);
+                        // -1：充值分享-2：充值-3：余额分享-4：余额
+                        switch (status){
+                        	case '-1':
+                                this.needRelease = true;
+                                this.hasBalanse = false;
+                                this.needShare = info.need_share;
+                                this.needPay = info.need_pay;
+                        		break;
+                            case '-2':
+                                this.needRelease = true;
+                                this.hasBalanse = false;
+                                this.canChoose = false;
+                                this.needPay = info.need_pay;
+                                break;
+                            case '-3':
+                                this.needRelease = true;
+                                this.hasBalanse = true;
+                                this.needShare = info.need_share;
+                                this.needPay = info.need_pay;
+                                break;
+                            case '-4':
+                                this.needRelease = true;
+                                this.hasBalanse = true;
+                                this.canChoose = false;
+                                this.needPay = info.need_pay;
+                                break;
+                        	default:
+                                this.needRelease = false;
+                                this.showRelease = false;
+                        		break;
+                        }
             		}
             	});
             },
@@ -175,6 +204,50 @@
             			console.log(res.data);
             		}
             	});
+            },
+            unlock(){
+                uni.showLoading();
+                uni.request({
+                	url: this.$requestUrl+'unlock',
+                	method: 'POST',
+                	header: {
+                		'content-type': 'application/x-www-form-urlencoded'
+                	},
+                	data: {
+                        comic_id: this.comicId,
+                        chapter: this.chapter,
+                        openid: this.openid,
+                        channel: 2
+                    },
+                	success: res => {
+                        if (res.data.status == 1) {
+                        	this.checkAuth();
+                        } else {
+                            uni.showToast({
+                            	title: '解锁失败，稍后重试！',
+                                icon: 'none',
+                            	mask: false,
+                            	duration: 1500
+                            });
+                        }
+                    },
+                	fail: () => {},
+                	complete: () => {
+                        uni.hideLoading();
+                    }
+                });
+            },
+            getReader(){
+                uni.request({
+                	url: this.$requestUrl+'get_reader',
+                	method: 'GET',
+                	data: {
+                        openid: this.openid
+                    },
+                	success: res => {
+                        this.balance = res.data.data.balance;
+                    }
+                });
             },
 			getChapter() {
 				uni.request({
@@ -303,21 +376,22 @@
     	background-color: transparent;
     }
     .auth{
-    	padding: 20px;
     	position: fixed;
     	bottom: 0;
     	left: 0;
     	right: 0;
-    	height: 500upx;
     	background-image: linear-gradient(to bottom, rgba(255,255,255,0.9), #FFF);
+    }
+    .auth .auth-body{
+        padding: 10px 20px;
     }
     .auth .box-header{
     	font-size: 28upx;
-    	color: #919191;
+    	color: #888;
     }
     .auth .brief{
     	font-size: 28upx;
-    	color: #919191;
+    	color: #888;
     	display: flex;
     	justify-content: space-between;
     	align-items: center;
@@ -329,17 +403,21 @@
     	display: block;
     	width: 200upx;
     	height: 1px;
-    	background-color: #CCC;
+    	background-color: rgba(136,136,136,.2);
     }
     .auth .title{
     	font-size: 42upx;
     	text-align: center;
-    	margin-bottom: 10px;
+    	margin-bottom: 5px;
     }
     .auth .title text{
-    	color: #E27C6B;
+    	color: #E64340;
     }
-    
+    .auth .balanse{
+        color: #E64340;
+        font-size: 28upx;
+        text-align: center;
+    }
     .auth .btn{
     	font-size: 32upx;
     	height: 90upx;
@@ -351,4 +429,12 @@
     .auth .btn:after{
     	border: 0;
     }
+    
+    .auth .auth-footer{
+        font-size: 28upx;
+        color: #888;
+        padding: 10px 20px;
+        border-top: 1px solid rgba(136,136,136,.1);
+    }
+        
 </style>

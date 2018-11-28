@@ -79,7 +79,7 @@
             {
                 "name" : "comic-detail",
                 "path" : "pages/comic-detail/comic-detail",
-                "query": "detailData={\"comic_id\":\"2\",\"title\":\"怪童\",\"chapter\":\"4\",\"cover\":\"http://comic.ineinv.com/Uploads/image/2018-11-26/5bfb5576c876a.jpg\"}"
+                "query": "detailData={\"comic_id\":\"2\",\"title\":\"怪童\",\"chapter\":\"5\",\"cover\":\"http://comic.ineinv.com/Uploads/image/2018-11-26/5bfb5576c876a.jpg\"}"
             },
             {
                 "name" : "comment",
