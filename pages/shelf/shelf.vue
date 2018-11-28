@@ -10,7 +10,7 @@
                     </view>
 					<view class="uni-media-list-text-bottom">
                         <view class="rate">已读{{product.rate}}%</view>
-                        <progress :percent="product.rate" stroke-width="12" color="#35352B" />
+                        <progress :percent="product.rate" stroke-width="12" activeColor="#35352B" />
 					</view>
 				</view>
 			</view>
