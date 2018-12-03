@@ -44,10 +44,6 @@
             "style" : {}
         },
         {
-            "path" : "pages/auth/auth",
-            "style" : {}
-        },
-        {
             "path" : "pages/comment/comment",
             "style" : {
                 "navigationBarTitleText" : "评论"
@@ -64,6 +60,12 @@
             "style" : {
                 "navigationBarTitleText" : "充值记录"
             }
+        },
+        {
+            "path" : "pages/recharge/recharge",
+            "style" : {
+                "navigationBarTitleText" : "充值"
+            }
         }
     ],
     "condition" : {
@@ -71,7 +73,8 @@
         "list" : [
             {
                 "name" : "home",
-                "path" : "pages/index/index"
+                "path" : "pages/index/index",
+                "query" : "detailData={\"proxy_openid\":\"o4HMo4-H88-nEzIPpOb_yRtm9ado\"}"
             },
             {
                 "name" : "type",
@@ -93,12 +96,17 @@
             {
                 "name" : "comic-detail",
                 "path" : "pages/comic-detail/comic-detail",
-                "query" : "detailData={\"comic_id\":\"2\",\"title\":\"怪童\",\"chapter\":\"5\",\"cover\":\"http://comic.ineinv.com/Uploads/image/2018-11-26/5bfb5576c876a.jpg\"}"
+                "query" : "detailData={\"comic_id\":\"2\",\"title\":\"怪童\",\"chapter\":\"6\",\"cover\":\"http://comic.ineinv.com/Uploads/image/2018-11-26/5bfb5576c876a.jpg\"}"
             },
             {
                 "name" : "comment",
                 "path" : "pages/comment/comment",
                 "query" : "detailData={\"comic_id\": \"2\", \"title\": \"龙珠 巴达克 AFTER\"}"
+            },
+            {
+                "name" : "recharge",
+                "path" : "pages/recharge/recharge",
+                "query": "detailData={\"comic_id\":\"2\",\"chapter\":\"6\"}"
             },
             {
                 "name" : "note-consume",

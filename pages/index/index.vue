@@ -36,22 +36,34 @@
 				autoplay: true,
 				interval: 5000,
 				duration: 500,
+                readerData: [],
 				bannerData: [],
-				comicData: []
+				comicData: [],
+                
+                proxyOpenid: ''
 			};
 		},
-		onLoad() {
+		onLoad(e) {
 			uni.showLoading();
+            
+            if (e.detailData) {
+            	// 判断是否代理推广
+            	let shareInfo = JSON.parse(e.detailData);
+            	this.proxyOpenid = shareInfo.proxy_openid;
+            }
+            
+            // #ifdef MP-WEIXIN
             let _this = this;
             wx.getSetting({
             	success (res){
             		if (res.authSetting['scope.userInfo']) {
-                        _this.authed = true;
+            			_this.authed = true;
             		}
             	}
             })
-            
             this.code_2_session();
+            // #endif
+            
 			// this.getBanner();
 			this.getProduct();
 		},
@@ -71,7 +83,7 @@
                 		},
                 		success: res => {
                 			this.authed = true;
-                			this.readerInfo = res.data.data;
+                			this.readerData = res.data.data;
                 			uni.showToast({
                 				title: '登录成功',
                 				duration: 1500
@@ -131,14 +143,18 @@
                 	success: res => {
                         uni.request({
                         	url: this.$requestUrl+'Comic/code_2_session',
-                        	method: 'GET',
+                        	method: 'POST',
+                            header: {
+                            	'content-type': 'application/x-www-form-urlencoded'
+                            },
                         	data: {
-                                js_code: res.code
+                                js_code: res.code,
+                                proxy_openid: this.proxyOpenid
                             },
                         	success: res => {
                                 let readerInfo = res.data.data;
-                                console.log(readerInfo);
                                 service.addUser(readerInfo);
+                                this.readerData = readerInfo;
                             },
                         	fail: () => {},
                         	complete: () => {}
@@ -148,9 +164,14 @@
             }
 		},
 		onShareAppMessage() {
+            let detail = {};
+            let isProxy = this.readerData.is_proxy;
+            if (isProxy) {
+            	detail.proxy_openid = this.readerData.openid;
+            }
 			return {
 				title: '漫画',
-				path: '/pages/index/index'
+				path: '/pages/index/index?detailData=' + JSON.stringify(detail)
 			}
 		},
 	}

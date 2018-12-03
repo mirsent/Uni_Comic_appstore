@@ -237,6 +237,15 @@
                     }
                 });
             },
+            recharge() {
+                let detail = {
+                    comic_id: this.comicId,
+                    chapter: this.chapter
+                }
+                uni.navigateTo({
+                	url: "../recharge/recharge?detailData=" + JSON.stringify(detail)
+                });
+            },
             getReader(){
                 uni.request({
                 	url: this.$requestUrl+'Comic/get_reader',

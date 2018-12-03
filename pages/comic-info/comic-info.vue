@@ -155,26 +155,35 @@
 				isChapterLoad: false,
 				isToUp: false,
 				chapterData: [],
-                commentData: []
+                commentData: [],
+                
+                isProxy: '',
+                proxyOpenid: ''
 			};
 		},
 		onLoad(e) {
 			uni.showLoading();
 			let _this = this;
 
-			wx.getSetting({
-				success(res) {
-					if (res.authSetting['scope.userInfo']) {
-						_this.authed = true;
-					}
-				}
-			})
+            // #ifdef MP-WEIXIN
+            wx.getSetting({
+            	success(res) {
+            		if (res.authSetting['scope.userInfo']) {
+            			_this.authed = true;
+            		}
+            	}
+            })
+            // #endif
 
 			let readerInfo = service.getUsers();
 			this.openid = readerInfo.openid;
+            this.isProxy = readerInfo.is_proxy;
 
 			let info = JSON.parse(e.detailData);
             this.comicId = info.comic_id;
+            if (info.proxy_openid) {
+            	this.proxyOpenid = info.proxy_openid;
+            }
 			uni.setNavigationBarTitle({
 				title: info.title
 			})
@@ -202,7 +211,8 @@
 								url: this.$requestUrl+'Comic/code_2_session',
 								method: 'GET',
 								data: {
-									js_code: res.code
+									js_code: res.code,
+                                    proxy_openid: this.proxyOpenid
 								},
 								success: res => {
 									let readerInfo = res.data.data;
@@ -470,6 +480,11 @@
 				comic_id: this.comic.comic_id,
 				title: title
 			}
+            
+            if (this.isProxy) {
+            	detail.proxy_openid = this.openid;
+            }
+            
 			return {
 				title: title,
 				imageUrl: imageUrl,
